@@ -1,38 +1,4 @@
 <!doctype html>
-<html lang="ja" data-theme="light">
-<head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<meta name="color-scheme" content="light">
-<title>10a狩 盤面別勝率</title>
-<meta name="description" content="10a狩の5人日の盤面（占,灰,灰,灰,灰 など）と条件から、村の最善進行と村勝率、その導出を載せた表">
-<link rel="stylesheet" href="style.css">
-<link rel="stylesheet" href="pos.css">
-</head>
-<body>
-<header class="top"><div class="wrap"><span class="repo">10a狩 盤面別勝率</span><span class="sep">/</span><a href="#list">盤面一覧</a><a href="#rules">前提</a><a href="index.html">終盤表（役と見え方の人数から）</a></div></header>
-<main class="wrap">
-<h1>10a狩 盤面別勝率（5人日）</h1>
-<p>盤面は生きている人の見え方を横一列に並べ、（ ）に条件を書きます。例：<b>占,灰,灰,灰,灰（占い真、灰に1狼または1狼1狂、狩人なし）</b>。</p>
-<p class="sm muted">占＝占いCO者、霊＝霊能CO者、狩＝狩人CO者、白＝確定白、黒＝確定黒、灰＝グレー。条件に「AまたはB」とあるときは、AとBを等確率として扱います。村はどちらか分からないので、<b>両方の平均が一番高くなる進行</b>を最善進行とします。内訳ごとの勝率と、もし内訳が分かっていた場合の勝率も並べます。</p>
-
-<h2 id="list">盤面一覧</h2>
-<div id="groups" class="chips"></div>
-<div id="list-t" class="tbl"></div>
-<div id="detail"></div>
-
-<h2 id="rules">前提</h2>
-<ul>
-<li><b>配役</b>：10a狩（占い・霊能・狩人・狼2・狂人・村人4）。生存5人の昼から始めます。</li>
-<li><b>内訳</b>：条件に書いた内訳は等確率です。灰の中で役がどう並ぶかも等確率です。</li>
-<li><b>村</b>：公開されている情報（吊り・噛み・GJ・占い結果・霊能結果・狩人CO）が同じなら、どの内訳でも同じ手を打ちます。毎日の吊り先は村が話し合いで決めます（人外の票では覆らない、という扱いです）。GJの翌朝に潜伏狩人がCOするかどうかも村の手です。村は手を確率で混ぜてもかまいません。</li>
-<li><b>人外</b>：狼と狂人はお互いを知っているものとし、公開情報と自分たちの噛み先から、村勝率が一番低くなる手を選びます。狩人や本物の占い師が誰かは知りません。人外が選ぶのは、噛み先・偽の占い結果・偽の霊能結果・狩人COへの対抗CO（灰の狼）です。</li>
-<li><b>占い・霊能・狩人</b>：本物の占い師は、毎晩まだ占っていない灰からランダムに占います（噛まれたら結果は出ません）。本物の霊能者は前日に吊った人の色を出します。狩人は 占いCO者 ＞ 霊能CO者 ＞ 確定白 ＞ ほかの人 の順で護衛します（同順位はランダム、連続護衛の制限なし）。</li>
-<li><b>決着</b>：狼が全滅すれば村の勝ち、狼が生存者の半数以上なら狼の勝ち。狂人が生きていて生存5人以上のときは、人外（狼＋狂人）が過半数なら狼の勝ち、同数なら決選で半々（PP）です。</li>
-<li><b>解き方</b>：村が勝率を最大化し、人外が最小化するゲームを、村と人外の両方が見えている情報だけで手を決める形（sequence form の線形計画）で解き、最後に分数で検算しています。</li>
-</ul>
-<footer>乱数やシミュレーションは使っていません。計算：<code>compute/pos/</code></footer>
-</main>
-<script src="pos.js"></script>
-</body>
-</html>
+<html lang="ja"><head><meta charset="utf-8"><meta http-equiv="refresh" content="0; url=pos/index.html"><title>10a狩 盤面別勝率</title><link rel="canonical" href="pos/index.html"></head>
+<body><p><a href="pos/index.html">盤面別勝率へ</a></p>
+<script>var h=location.hash.slice(1);location.replace('pos/'+(/^p5-/.test(h)?h+'.html':'index.html'));</script></body></html>
