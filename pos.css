@@ -1,0 +1,28 @@
+.sm{font-size:13px}
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin:0 0 12px}
+.chips button{font:inherit;font-size:13px;padding:3px 12px;border:1px solid var(--border);border-radius:2em;background:var(--bg);color:var(--fg);cursor:pointer}
+.chips button.on{border-color:var(--accent);background:var(--hl);color:var(--accent);font-weight:600}
+table.bl td{font-size:14px}
+table.bl tr.c{cursor:pointer}table.bl tr.c:hover td{background:var(--subtle)}
+table.bl tr.sel td{background:var(--hl)}
+.bd-name{font-weight:600;white-space:nowrap;letter-spacing:.02em}
+.cond{color:var(--muted);font-size:13px}
+.fr{display:inline-flex;flex-direction:column;align-items:center;vertical-align:middle;font-family:var(--mono);font-size:.82em;line-height:1.05;margin:0 1px}
+.fr>span:first-child{border-bottom:1px solid currentColor;padding:0 2px}
+.fr>span{padding:0 2px}
+.num{font-family:var(--mono)}
+.res{border:1px solid var(--border);border-radius:6px;padding:14px 16px;margin:16px 0}
+.res h3{margin:0 0 6px}
+.big{font-size:2em;font-weight:600;font-family:var(--mono)}
+.big .fr{font-size:.5em}
+.pc{color:var(--muted);font-size:14px;margin-left:6px}
+.eq{font-family:var(--mono);font-size:15px;margin:6px 0 4px;line-height:2.1}
+.eq .sym{font-style:italic;font-weight:600}
+.ans{border-left:3px solid var(--border);padding:2px 0 2px 14px;margin:0 0 18px}
+.ans .path{font-size:13px;color:var(--muted)}
+.ans ul{margin:2px 0 6px;padding-left:18px;font-size:13.5px}
+.ans li{margin:1px 0}
+.alt{font-size:13.5px;margin:2px 0}
+.alt .ch{color:var(--accent);font-weight:600}
+.pol td{font-size:14px}
+details>summary{cursor:pointer;font-weight:600;margin:8px 0}
