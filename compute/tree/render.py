@@ -18,6 +18,12 @@ def frac(s): return f'（{s}）' if '/' in s and len(s) <= 11 else ''
 R = [json.load(open(f)) for f in glob.glob(os.path.join(CACHE, 'b*.json'))]
 BYKEY = {(r['n'], r['lab'], r['note']): r for r in R}
 DAYS = sorted({r['n'] for r in R}, reverse=True)
+def board_order(x):
+    """占いの数 → 霊能の数 → 狩人の数 → 灰の数 の多い順（降べき）"""
+    L = x['lab'].split(',')
+    c = lambda p: sum(1 for l in L if l.startswith(p))
+    return (-c('占'), -c('霊'), -c('狩'), -c('灰'), x['lab'], x['note'])
+
 def title(r): return r['lab'] + (f'（{r["note"]}）' if r['note'] else '')
 def gname(g): return g['truth'] + (f'、{g["wolves"]}' if g['wolves'] else '') if g['truth'] else (g['wolves'] or '')
 
@@ -142,7 +148,7 @@ LEGEND = ('<div class="legend sm"><b>記号</b>　占a・占b＝占いCO者（a�
 def menu(cur):
     out = ['<div class="side"><div class="mb"><div class="mh">メニュー</div><a href="index.html">トップページ</a><a href="index.html#rules">前提</a><a href="https://leonmfvo.github.io/werewolf-tree-10a/">分岐サイト</a><a href="../index.html">終盤表</a></div>']
     for n in DAYS:
-        L = sorted([x for x in R if x['n'] == n], key=lambda x: x['id'])
+        L = sorted([x for x in R if x['n'] == n], key=board_order)
         op = ' open' if any(x['id'] == cur for x in L) else ''
         out.append(f'<details class="mb"{op}><summary class="mh">{n}人日（{len(L)}）</summary><ul>')
         for x in L:
@@ -178,7 +184,7 @@ def index_page():
          '<p>盤面（生きている人の見た目）を選ぶと、内訳と<b>人外が何人残っているか（1狼1狂生存 など）・狩人が灰に残っているか</b>ごとに、村勝率と、次の昼にどの盤面へ帰着するかが出ます。それまでに誰が死んだかは載せません。</p>',
          LEGEND]
     for n in DAYS:
-        L = sorted([x for x in R if x['n'] == n], key=lambda x: x['id'])
+        L = sorted([x for x in R if x['n'] == n], key=board_order)
         s.append(f'<h2>{n}人日</h2><ul>')
         for x in L:
             s.append(f'<li><a href="{x["id"]}.html">{e(x["lab"])}</a>{" <span class=sm>" + e(x["note"]) + "</span>" if x["note"] else ""}</li>')
