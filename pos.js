@@ -11,12 +11,10 @@
   function list() {
     const gs = ['すべて', ...new Set(D.map((b) => b.group))];
     $('#groups').innerHTML = gs.map((g) => `<button type="button" class="${g === grp ? 'on' : ''}" data-g="${esc(g)}">${esc(g)}</button>`).join('');
-    const rows = D.filter((b) => grp === 'すべて' || b.group === grp).map((b) => {
-      const cs = b.cases.length > 1 ? b.cases.map((c) => `${esc(c.name)} ${pct(c.value)}`).join('<br>') : '';
-      return `<tr class="c${location.hash === '#' + b.id ? ' sel' : ''}" data-id="${b.id}"><td><span class="bd-name">${esc(b.labels.join(','))}</span><div class="cond">${esc(b.cond.join('、'))}</div></td>
-        <td class="n">${pct(b.value)}<br>${fr(b.value)}</td><td class="sm">${cs}</td></tr>`;
-    }).join('');
-    $('#list-t').innerHTML = `<table class="bl"><thead><tr><th>盤面（条件）</th><th>村勝率</th><th>内訳ごと（最善進行で）</th></tr></thead><tbody>${rows}</tbody></table>`;
+    const rows = D.filter((b) => grp === 'すべて' || b.group === grp).map((b) =>
+      `<tr class="c${location.hash === '#' + b.id ? ' sel' : ''}" data-id="${b.id}"><td><span class="bd-name">${esc(b.labels.join(','))}</span><div class="cond">${esc(b.cond.join('、'))}</div></td>
+        <td class="n">${pct(b.value)}</td></tr>`).join('');
+    $('#list-t').innerHTML = `<table class="bl"><thead><tr><th>盤面（条件）</th><th>村勝率</th></tr></thead><tbody>${rows}</tbody></table>`;
   }
 
   function eqline(r) {
