@@ -12,10 +12,10 @@
 
 ## 盤面別勝率
 
-- `pos/`：wiki ふうの盤面ページ。分岐サイト（werewolf-tree-10a）の全分岐ツリーに出てくる昼の盤面を、人数（3〜9人日）ごとに出やすい順に上位40個載せる。ページの中は内訳・狼の位置・狂人と狩人の生存確率で分け、次の昼にどの盤面へ帰着するかを確率つきで載せる
-- 表記：占a・占b・占c＝占いCO者、白a＝占aの○、白ab＝占aと占bの○、黒a＝占aの●、確白＝人間確定、灰＝グレー
-- `compute/tree/extract.py`：分岐サイトのツリー（`data/trees/`）から昼の局面と到達確率・帰着先を集める
-- `compute/tree/notation.py`：局面の文字列を盤面の書き方に直す
-- `compute/tree/build.py`：ページを作る
-- 作り直し：`cd compute/tree && python3 extract.py <werewolf-tree-10a の場所> ents.json && python3 build.py ents.json ../.. 40`
+- `pos/`：wiki ふうの盤面ページ（3〜9人日）。盤面は生きている人の見た目（占a,占b,白a,白ab,黒a,確白,灰 など。◎ 真置き、✕ 破綻）。ページの中を内訳・狼の位置と、人外の残り（1w1k生存 など）・狩人の位置（灰に狩／狩CO済み／なし）で分け、村勝率と次の昼の帰着先を載せる
+- 規則と計算は分岐サイト（werewolf-tree-10a）と同じエンジン。村の進行は分岐サイトがその内訳に使っている進行
+- `compute/tree/extract.py`：分岐サイトのツリーから昼の盤面と到達確率を集める（盤面の選び方に使う）
+- `compute/tree/eng/`：分岐サイトのエンジン一式（engine10x・tree10ax など）と、盤面＋条件から局面を作って解く `board.py`・`state.py`・`eng_build.py`
+- `compute/tree/render.py`：ページを作る
+- 作り直し：`cd compute/tree && python3 extract.py <werewolf-tree-10a> ents.json && python3 eng/eng_build.py ents.json cache 40 4 && python3 render.py cache ../..`
 - `compute/pos/`：旧版の厳密ソルバ（村が話し合いで吊る規則。今のページでは使っていない）
