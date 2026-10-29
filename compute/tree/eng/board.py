@@ -97,7 +97,7 @@ def options(P, key):
             bel = {k: v / tot for k, v in bel.items()}
             w = wolves_alive(P)
             mad_alive = mo == 'alive' or (mo == 'co' and E.mad_alive(mco, P['slots'], P['meds']))
-            name = f'{w}w' + ('1k' if mad_alive else '') + '生存' + {'hide': '・灰に狩', 'co': '・狩CO済み', 'dead': ''}[ho]
+            name = f'{w}狼' + ('1狂' if mad_alive else '') + '生存' + {'hide': '・灰に狩', 'co': '・狩CO済み', 'dead': ''}[ho]
             if mo == 'co' and mad_alive: name += '（狂人はCO者）'
             out.append(dict(name=name, mad=mo, hunter=ho, bel=bel))
     return out

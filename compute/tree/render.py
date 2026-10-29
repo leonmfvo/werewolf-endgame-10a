@@ -33,8 +33,8 @@ def avg_of(r):
 def target(t, v):
     if t is None: return '村勝ち' if fv(v) == 1 else '狼勝ち' if fv(v) == 0 else pct(v)
     pm, ph = fv(t['pm']), {k: fv(x) for k, x in t['ph'].items()}
-    st = [f'{t["w"]}w']
-    if pm == 1: st[0] += '1k'
+    st = [f'{t["w"]}狼']
+    if pm == 1: st[0] += '1狂'
     st.append('生存')
     if ph['hide'] == 1: st.append('・灰に狩')
     elif ph['co'] == 1: st.append('・狩CO済み')
@@ -110,7 +110,7 @@ def board_page(r):
     for g in r['groups']:
         for o in g['opts']:
             if o['name'] not in sits: sits.append(o['name'])
-    order = lambda n: (int(n[0]), '1k' not in n, '灰に狩' not in n, '狩CO' not in n, n)
+    order = lambda n: (int(n[0]), '1狂' not in n, '灰に狩' not in n, '狩CO' not in n, n)
     sits.sort(key=order)
     s = [f'<h1 class="pt">{e(r["lab"])}<span class="day">{r["n"]}人日</span></h1>']
     if r['note']: s.append(f'<p class="cond">{e(r["note"])}</p>')
@@ -137,7 +137,7 @@ def board_page(r):
 LEGEND = ('<div class="legend sm"><b>記号</b>　占a・占b＝占いCO者（a・b で区別）、白a＝占aの○、黒a＝占aの●、白ab＝占aと占bの両方から○。'
           '◎＝村が<b>真置き</b>している占い師と、その占い師の結果。✕＝<b>破綻</b>した（偽と確定した）占い師と、その占い師の結果（白b✕ は偽の占い師の○なので、囲いの可能性がある）。'
           '確白＝人間確定。GJの翌朝に狩人がCOして護衛先を申告すると、その狩人と、護衛されていた灰の人が人間確定になる（このときは狩人はもうCO済みなので「灰に狩」はない）。'
-          '狩＝狩人CO者（狼が対抗COして2人いる）。w＝狼、k＝狂人。</div>')
+          '狩＝狩人CO者（狼が対抗COして2人いる）。1狼1狂生存＝狼1人と狂人が生きている。</div>')
 
 def menu(cur):
     out = ['<div class="side"><div class="mb"><div class="mh">メニュー</div><a href="index.html">トップページ</a><a href="index.html#rules">前提</a><a href="https://leonmfvo.github.io/werewolf-tree-10a/">分岐サイト</a><a href="../index.html">終盤表</a></div>']
@@ -175,7 +175,7 @@ def page(t, body, cur):
 
 def index_page():
     s = ['<h1 class="pt">10a狩 盤面別勝率</h1>',
-         '<p>盤面（生きている人の見た目）を選ぶと、内訳と<b>人外が何人残っているか（w＝狼、k＝狂人）・狩人が灰に残っているか</b>ごとに、村勝率と、次の昼にどの盤面へ帰着するかが出ます。それまでに誰が死んだかは載せません。</p>',
+         '<p>盤面（生きている人の見た目）を選ぶと、内訳と<b>人外が何人残っているか（1狼1狂生存 など）・狩人が灰に残っているか</b>ごとに、村勝率と、次の昼にどの盤面へ帰着するかが出ます。それまでに誰が死んだかは載せません。</p>',
          LEGEND]
     for n in DAYS:
         L = sorted([x for x in R if x['n'] == n], key=lambda x: x['id'])
