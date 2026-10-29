@@ -14,18 +14,23 @@ def sym(s): return f'P<sub>{s[1:]}</sub>' if s.startswith('P') and len(s) > 1 el
 def outcome(v): return '村勝ち' if v == '1' else '狼勝ち' if v == '0' else v
 def name(b): return ','.join(b['labels'])
 
+def group(b):
+    L = b['labels']
+    if L.count('占') == 2: return '占い2CO'
+    if L.count('霊') == 2: return '霊能2CO'
+    return '占い師あり' if '占' in L else '占い師なし'
 GROUPS = []
 for b in D:
-    if b['group'] not in GROUPS: GROUPS.append(b['group'])
+    if group(b) not in GROUPS: GROUPS.append(group(b))
 
 def menu(cur):
     out = ['<div class="side"><div class="mb"><div class="mh">メニュー</div><a href="index.html">トップページ</a><a href="index.html#rules">前提</a><a href="../index.html">終盤表（役と見え方の人数から）</a></div>']
     for g in GROUPS:
         out.append(f'<div class="mb"><div class="mh">5人日 {e(g)}</div><ul>')
         for b in D:
-            if b['group'] != g: continue
+            if group(b) != g: continue
             c = ' class="cur"' if b['id'] == cur else ''
-            out.append(f'<li><a href="{b["id"]}.html"{c}>{e(name(b))}<span>{e("・".join(b["cond"]))}</span></a></li>')
+            out.append(f'<li><a href="{b["id"]}.html"{c}>{e(name(b))}</a></li>')
         out.append('</ul></div>')
     out.append('</div>')
     return ''.join(out)
@@ -52,36 +57,30 @@ def page(title, body, cur=None, desc=''):
 </html>
 '''
 
-def board_page(b):
-    multi = len(b['cases']) > 1
-    s = [f'<h1 class="pt">{e(name(b))}</h1>', f'<p class="cond">条件：{e("、".join(b["cond"]))}</p>']
-    # 村勝率
-    s.append('<h2>村勝率</h2>')
+def section(sec, aid):
+    b = sec; multi = len(b['cases']) > 1
+    s = [f'<h3 id="{aid}">{e(sec["title"])} → {b["value"]}</h3>']
     s.append(f'<p class="big">村勝率 {b["value"]}（{pct(b["value"])}）</p>')
     if multi:
-        s.append('<p>内訳ごと（村は内訳が分からないので、平均が一番高くなる進行をとる）</p><ul class="arrow">')
+        s.append('<p class="sm">村はどちらか分からないので、平均が一番高くなる進行をとる</p><ul class="arrow">')
         for c in b['cases']:
-            k = '' if c['known'] == c['value'] else f'（内訳が分かっていれば {c["known"]}）'
-            s.append(f'<li>{e(c["name"])} → {c["value"]}{k}</li>')
-        s.append(f'<li>平均 → {b["value"]}</li></ul>')
-    # 1日目の吊り先
-    s.append('<h2>1日目の吊り先</h2><ul class="arrow">')
+            k = '' if c['known'] == c['value'] else f'（分かっていれば {c["known"]}）'
+            s.append(f'<li>{e(c["name"])}だった場合 → {c["value"]}{k}</li>')
+        s.append('</ul>')
+    s.append('<p class="sub">1日目の吊り先</p><ul class="arrow">')
     best = max(fv(v) for r in b['root'] for v in r['values'])
     for r in b['root']:
         v = r['value'] or '〜'.join(r['values'])
         isb = any(fv(x) == best for x in r['values'])
-        det = '' if not multi else '（' + '、'.join(f'{e(c["name"])} {x}' for c, x in zip(b['cases'], r['cases'])) + '）'
-        s.append(f'<li>{e(r["label"])}を吊る → {v}{det}{" <b>← 最善</b>" if isb else ""}</li>')
-    s.append('</ul>')
-    # 最善進行
-    s.append('<h2>最善進行</h2><p class="sm">灰A・灰B…は名前が出てきた順の呼び名（同じ見え方の人を入れ替えた局面はまとめている）。（ ）はその局面になる確率。</p><ul class="arrow">')
+        s.append(f'<li>{e(r["label"])}を吊る → {v}{" <b>← 最善</b>" if isb else ""}</li>')
+    s.append('</ul><p class="sub">最善進行</p><ul class="arrow">')
     for p in b['policy']:
         seen = '' if p['seen'] == '初日' else f'（{e(p["seen"])}）'
-        s.append(f'<li>{e(p["when"])}{seen}：<b>{e(p["act"])}</b>{"" if p["p"] == "1" else f"（{p[chr(112)]}）"}</li>')
+        pr = '' if p['p'] == '1' else f'（{p["p"]}）'
+        s.append(f'<li>{e(p["when"])}{seen}：<b>{e(p["act"])}</b>{pr}</li>')
     s.append('</ul>')
-    # 導出
     for d, c in zip(b['deriv'], b['cases']):
-        s.append(f'<h2>{e(d["name"])} → {c["value"]}</h2>')
+        s.append(f'<details><summary>導出{"（" + e(d["name"]) + "）" if multi else ""}</summary>')
         for r in d['f']:
             s.append('<div class="ans">')
             if r['path']: s.append(f'<p class="path">{e(" → ".join(r["path"]))}</p>')
@@ -95,26 +94,36 @@ def board_page(b):
                 rv = f'{sym(t["v"])} = {t["val"]}' if t.get('val') else outcome(t['v'])
                 s.append(f'<li>{t["q"]}：{e(t["ev"])} → {rv}</li>')
             s.append('</ul></div>')
-    # まとめ
-    s.append('<h2>まとめ</h2><ul class="arrow">')
-    first = b['policy'][0]['act'].replace('A', '') if b['policy'] else ''
-    s.append(f'<li>1日目は{e(first)}</li>')
-    for c in b['cases']: s.append(f'<li>{e(c["name"])} → {c["value"]}</li>')
-    if multi: s.append(f'<li>平均 → {b["value"]}（{pct(b["value"])}）</li>')
-    else: s.append(f'<li>村勝率 → {b["value"]}（{pct(b["value"])}）</li>')
-    s.append('</ul>')
-    return page(name(b) + '（' + '、'.join(b['cond']) + '）', ''.join(s), b['id'], f'{b["note"]} の村勝率と最善進行')
+        s.append('</details>')
+    return ''.join(s)
+
+def board_page(b):
+    s = [f'<h1 class="pt">{e(name(b))}</h1>']
+    body = []
+    summ = []
+    for ti, t in enumerate(b['truths']):
+        if t['name']: body.append(f'<h2>{e(t["name"])}の場合</h2>')
+        summ.append(f'<p class="sub">{e(t["name"]) or "生存状況"}</p><ul class="arrow">' if t['name'] else '<ul class="arrow">')
+        for si, sec in enumerate(t['sections']):
+            aid = f't{ti + 1}-{si + 1}'
+            body.append(section(sec, aid))
+            summ.append(f'<li><a href="#{aid}">{e(sec["title"])}</a> → {sec["value"]}（{pct(sec["value"])}）</li>')
+        summ.append('</ul>')
+    s.append('<h2>まとめ</h2>' + ''.join(summ))
+    s += body
+    return page(name(b), ''.join(s), b['id'], f'{name(b)} の生存状況ごとの村勝率と最善進行')
 
 def index_page():
     s = ['<h1 class="pt">10a狩 盤面別勝率（5人日）</h1>',
-         '<p>盤面は生きている人の見え方を横一列に並べ、（ ）に条件を書きます。例：<b>占,灰,灰,灰,灰（占い真、灰に1狼または1狼1狂、狩人なし）</b></p>',
-         '<p class="sm">占＝占いCO者、霊＝霊能CO者、狩＝狩人CO者、白＝確定白、黒＝確定黒、灰＝グレー。「AまたはB」は等確率として扱い、村はどちらか分からないので両方の平均が一番高くなる進行を最善進行とします。</p>']
+         '<p>盤面は生きている人の見え方を横一列に並べ、（ ）に条件を書きます。盤面を選ぶと、真偽（占い真など）と生存状況（1w生存・1w1k生存・2w生存、狩生存かどうか）ごとに村勝率・最善進行・導出が並びます。</p>',
+         '<p class="sm">占＝占いCO者、霊＝霊能CO者、狩＝狩人CO者、白＝確定白、黒＝確定黒、灰＝グレー。w＝狼、k＝狂人。真偽と生存状況は村が知っているものとして解きます。「1wか1w1kか不明」は両方を等確率とし、村は平均が一番高くなる進行をとります。</p>']
     for g in GROUPS:
-        s.append(f'<h2>{e(g)}</h2><table class="bl"><tbody>')
+        s.append(f'<h2>{e(g)}</h2><ul>')
         for b in D:
-            if b['group'] != g: continue
-            s.append(f'<tr><td><a href="{b["id"]}.html">{e(name(b))}</a><div class="sm">{e("、".join(b["cond"]))}</div></td><td class="n">{pct(b["value"])}</td></tr>')
-        s.append('</tbody></table>')
+            if group(b) != g: continue
+            ts = '、'.join(t['name'] for t in b['truths'] if t['name'])
+            s.append(f'<li><a href="{b["id"]}.html">{e(name(b))}</a> <span class="sm">{e(ts)}</span></li>')
+        s.append('</ul>')
     s.append('''<h2 id="rules">前提</h2><ul>
 <li>配役：10a狩（占い・霊能・狩人・狼2・狂人・村人4）。生存5人の昼から始める。</li>
 <li>内訳：条件に書いた内訳は等確率。灰の中で役がどう並ぶかも等確率。</li>
@@ -127,5 +136,7 @@ def index_page():
     return page('トップページ', ''.join(s), None, '10a狩の5人日の盤面ごとの村勝率・最善進行・導出')
 
 open(os.path.join(OUT, 'index.html'), 'w').write(index_page())
+import glob
+for f in glob.glob(os.path.join(OUT, 'p5-*.html')): os.remove(f)
 for b in D: open(os.path.join(OUT, b['id'] + '.html'), 'w').write(board_page(b))
 print(len(D) + 1, 'pages')

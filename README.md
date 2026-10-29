@@ -12,8 +12,8 @@
 
 ## 盤面別勝率（5人日）
 
-- `pos/`：wiki ふうの静的ページ（左にメニュー、1盤面1ページ）。`cd compute/pos && python3 build_wiki.py ../..` で `data/pos5.json` から作り直す（`pos.html` は `pos/` への転送）
+- `pos/`：wiki ふうの静的ページ。見た目の盤面（占,灰,灰,灰,灰 など）を1ページにし、真偽（占い真など）と生存状況（1w生存・1w1k生存・2w生存・狩生存・1wか1w1kか不明）ごとに村勝率・1日目の吊り先・最善進行・導出を載せる（`pos.html` は `pos/` への転送）
 - `compute/pos/pos.py`：村と人外がそれぞれ見えている情報だけで手を決めるゲームを sequence form の線形計画で解き、分数で検算する
-- `compute/pos/boards.py`：盤面一覧（ここに足せば増やせる）
+- `compute/pos/boards2.py`：見た目の盤面と真偽の一覧（生存状況は自動で並ぶ。ここに足せば増やせる）
 - `compute/pos/derive.py`：導出の式と最善進行の表
-- `cd compute/pos && python3 build_pos.py ../../data/pos5.json` で作り直す
+- 作り直し：`cd compute/pos && python3 build_surf.py ../../data/pos5.json && python3 build_wiki.py ../..`

@@ -39,3 +39,6 @@ table.bl td{border:1px solid var(--border);padding:6px 10px;vertical-align:top}
 table.bl td.n{text-align:right;white-space:nowrap;font-family:ui-monospace,Menlo,Consolas,monospace;width:6em}
 .foot{border-top:1px solid var(--border);padding:12px 16px;font-size:12px;color:var(--muted);text-align:center}
 @media (max-width:720px){.layout{flex-direction:column}.side{order:1;flex:none}}
+h3{font-size:17px;margin:20px 0 8px;padding:3px 10px;border-left:5px solid var(--muted);border-bottom:1px solid var(--border)}
+.sub{font-weight:700;margin:8px 0 2px}
+details{margin:4px 0 10px}details>summary{cursor:pointer;color:var(--link)}

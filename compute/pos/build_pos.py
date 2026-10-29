@@ -2,7 +2,6 @@ import json, sys, time
 from fractions import Fraction as F
 from pos import Game, solve, behaviour, exact_eval, case_values
 from derive import build_trie, formulas, policy, fs
-from boards import boards
 
 def run(b):
     g = Game(b)
@@ -35,9 +34,3 @@ def run(b):
                size=[len(g.vinfo), len(g.ainfo)])
     return out
 
-if __name__ == '__main__':
-    res = []
-    for b in boards():
-        t = time.time(); r = run(b); res.append(r)
-        print(r['id'], r['note'], r['value'], [c['value'] for c in r['cases']], [c['known'] for c in r['cases']], f'{time.time() - t:.1f}s', flush=True)
-    json.dump(res, open(sys.argv[1] if len(sys.argv) > 1 else 'pos5.json', 'w'), ensure_ascii=False, separators=(',', ':'))
