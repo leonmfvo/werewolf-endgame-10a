@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="ja" data-theme="light">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="color-scheme" content="light">
+<title>10a狩人 終盤表</title>
+<meta name="description" content="10a狩人配役の終盤（生存3〜9人）の局面から、村勝率と最善の吊り先・噛み先を厳密に求める表">
+<link rel="stylesheet" href="style.css">
+<link rel="stylesheet" href="app.css">
+</head>
+<body>
+<header class="top"><div class="wrap"><span class="repo">10a狩人 終盤表</span><span class="sep">/</span><a href="#calc">局面を入れる</a><a href="#gray">全員グレーの表</a><a href="#rules">前提</a></div></header>
+<main class="wrap">
+<h1>10a狩人 終盤表</h1>
+<p>配役 <b>占い・霊能・狩人・狼2・狂人・村人4</b>（10人）の終盤、生存 <b>3〜9人</b> の局面について、村勝率を厳密に（分数で）求めた表です。生きている人の<b>本当の役</b>と、<b>村から見えている情報</b>（グレー・確定白・確定黒・CO済みなど）を入れると、その局面の村勝率と、吊り先・噛み先ごとの村勝率が出ます。</p>
+
+<h2 id="calc">局面を入れる</h2>
+<div class="box"><div class="bd">
+<div class="seg" role="tablist" aria-label="昼夜"><button type="button" class="sg on" data-ph="D">昼（これから吊る）</button><button type="button" class="sg" data-ph="N">夜（これから噛む）</button></div>
+<div id="form" class="form"></div>
+<div class="toolbar"><span class="muted sm">例：</span><span id="presets"></span></div>
+</div></div>
+<div id="result" aria-live="polite"></div>
+
+<h2 id="gray">全員グレーの表</h2>
+<p>占い・霊能はもういなくて、生きている人が全員グレー（誰も確定していない）ときの村勝率です。指定役がいないので吊りは自由投票です。押すと上の計算欄にその局面が入ります。</p>
+<div id="graytable" class="tbl"></div>
+
+<h2 id="rules">前提</h2>
+<ul>
+<li><b>見え方</b>：グレー＝村からは何も分からない人。確定白＝人間だと分かっている人（占いの○など。狂人も占いでは○なので確定白になりえます）。確定黒＝占いの●で狼と分かっている人。狩人CO者＝対抗なしでCOした狩人。狩人CO者2人＝狩人COに狼が対抗した2人。確定占い・確定霊能＝本物と分かっている占い師・霊能者。</li>
+<li><b>吊り</b>：指定役は 確定占い ＞ 確定霊能 ＞ 狩人CO者 ＞ 確定白（ランダム）の順。指定役は吊る区分を村勝率が一番高くなるように選び、区分の中ではランダムに吊ります。確定白の指定役が実は狂人なら、村勝率が一番低くなる区分を選びます。指定役がいなければ、確定黒・狩人CO者2人は全員一致で吊り、それ以外はグレー（いなければ確定白）から自由投票（狼は身内に投票しない多数決、ほかの人はランダムに投票）です。</li>
+<li><b>PP</b>：狂人が生きていて生存5人以上のとき、人外（狼＋狂人）が過半数なら狼の勝ち、同数なら決選で半々です。</li>
+<li><b>夜</b>：狼は噛む区分を村勝率が一番低くなるように選び、区分の中ではランダムに噛みます（狼は、どの役が生きているかは知っているが、誰がどの役かは知らない、という扱いです）。狩人は 確定占い ＞ 確定霊能 ＞ 確定白（ランダム）＞ ほかの生存者（ランダム）の順に護衛します。本物の占い師はグレーからランダムに1人を占い、結果は朝に公開されます。本物の霊能者は前日に吊った人の色を公開します（狩人CO者2人の片方を吊ったときは、もう片方の正体が分かります）。</li>
+<li><b>GJ の朝</b>：潜伏している狩人は「COして護衛先（噛まれた人）を申告する」か「潜伏を続ける」かを、村勝率が高い方で選びます。COすると、狼は灰の狼に対抗の狩人COをさせるかを選びます。</li>
+<li>指定・自由投票・占い先・狩人の護衛先は、計算ではランダムです。実戦では読みでここが変わり、村勝率も上下します。</li>
+</ul>
+<footer>計算は全局面を厳密に解いたもので、乱数やシミュレーションは使っていません。</footer>
+</main>
+<script src="app.js"></script>
+</body>
+</html>
