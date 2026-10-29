@@ -10,10 +10,12 @@
 
 関連：開始時からの全分岐ツリーと均衡は https://leonmfvo.github.io/werewolf-tree-10a/
 
-## 盤面別勝率（5人日）
+## 盤面別勝率
 
-- `pos/`：wiki ふうの静的ページ。見た目の盤面（占,灰,灰,灰,灰 など）を1ページにし、真偽（占い真など）と生存状況（1w生存・1w1k生存・2w生存・狩生存・1wか1w1kか不明）ごとに村勝率・1日目の吊り先・最善進行・導出を載せる（`pos.html` は `pos/` への転送）
-- `compute/pos/pos.py`：村と人外がそれぞれ見えている情報だけで手を決めるゲームを sequence form の線形計画で解き、分数で検算する
-- `compute/pos/boards2.py`：見た目の盤面と真偽の一覧（生存状況は自動で並ぶ。ここに足せば増やせる）
-- `compute/pos/derive.py`：導出の式と最善進行の表
-- 作り直し：`cd compute/pos && python3 build_surf.py 5 ../../data/pos5.json && python3 build_wiki.py ../..`（3・5・6人日それぞれ）
+- `pos/`：wiki ふうの盤面ページ。分岐サイト（werewolf-tree-10a）の全分岐ツリーに出てくる昼の盤面を、人数（3〜9人日）ごとに出やすい順に上位40個載せる。ページの中は内訳・狼の位置・狂人と狩人の生存確率で分け、次の昼にどの盤面へ帰着するかを確率つきで載せる
+- 表記：占a・占b・占c＝占いCO者、白a＝占aの○、白ab＝占aと占bの○、黒a＝占aの●、確白＝人間確定、灰＝グレー
+- `compute/tree/extract.py`：分岐サイトのツリー（`data/trees/`）から昼の局面と到達確率・帰着先を集める
+- `compute/tree/notation.py`：局面の文字列を盤面の書き方に直す
+- `compute/tree/build.py`：ページを作る
+- 作り直し：`cd compute/tree && python3 extract.py <werewolf-tree-10a の場所> ents.json && python3 build.py ents.json ../.. 40`
+- `compute/pos/`：旧版の厳密ソルバ（村が話し合いで吊る規則。今のページでは使っていない）
