@@ -80,7 +80,8 @@ def options(P, key):
     out = []
     madopts = [('co', None)] if mco is not None else [('alive', None), ('dead', None)]
     for mo, _ in madopts:
-        for ho in ('hide', 'co', 'dead'):
+        flagged = any(r[-1] != 0 for r, w, h in P['cats'])   # 人間確定・狩人CO者2人がいる＝狩人はもうCOした（灰に潜伏はありえない）
+        for ho in (('co', 'dead') if flagged else ('hide', 'dead')):
             bel = defaultdict(F)
             mpos = [(mco, 1)] if mo == 'co' else ([(-1, 1)] if mo == 'dead' else [(r, h) for r, h in hum if r[-1] != 2])
             if ho == 'dead': hpos = [(None, 1)]

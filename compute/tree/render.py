@@ -22,9 +22,9 @@ def title(r): return r['lab'] + (f'（{r["note"]}）' if r['note'] else '')
 def gname(g): return g['truth'] + (f'、{g["wolves"]}' if g['wolves'] else '') if g['truth'] else (g['wolves'] or '')
 
 def anchor(r, g=None, o=None):
-    gi = r['groups'].index(g) + 1 if g else None
-    if gi is None: return ''
-    return f'#g{gi}' + (f'-{g["opts"].index(o) + 1}' if o else '')
+    if g is None: return ''
+    gi = r['groups'].index(g) + 1
+    return f'#g{gi}-{g["opts"].index(o) + 1}' if o else f'#g{gi}-1'
 
 def avg_of(r):
     tw = sum(g['w'] for g in r['groups'])
@@ -53,13 +53,12 @@ def target(t, v):
         if g2 and not unk:
             o2 = next((o for o in g2['opts'] if o['name'].split('（')[0] == s), None)
         href = f'{r2["id"]}.html{anchor(r2, g2, o2)}'
-    cond = f'{s}、{t["truth"]}' + (f'、{t["wolves"]}' if t['wolves'] else '')
+    cond = '、'.join(x for x in (s, t['truth'], t['wolves']) if x)
     body = f'{name}［{e(cond)}］'
     return (f'<a href="{href}">{body}</a>' if href else body) + f' → {pct(v)}'
 
-def option_html(r, g, o, gi, oi):
-    out = [f'<h3 id="g{gi}-{oi}">{e(o["name"])} → {pct(o["v"])}{frac(o["v"])}</h3>']
-    seen = set()
+def choices_html(o):
+    out = []; seen = set()
     for c in o['choices']:
         k = (c['who'], c['t'], tuple(a[0] for a in c['alts']))
         if k in seen or len(c['alts']) < 2: continue
@@ -68,36 +67,77 @@ def option_html(r, g, o, gi, oi):
         bi = c['alts'][c['best']][0]
         items = '、'.join((f'<b>{e(B1.short(a[0]))}→{pct(a[1])}</b>' if a[0] == bi else f'{e(B1.short(a[0]))}→{pct(a[1])}') for a in alts[:6])
         out.append(f'<p class="alt">{"村" if c["who"] == "v" else "人外"}の選択：{items}</p>')
-        if len(seen) >= 5: break
-    out.append('<ul class="arrow">')
-    rows = sorted(o['succ'], key=lambda s: -fv(s['p']))
-    for s in rows[:12]:
-        labs = ' → '.join(B1.short(x) for x in s['labs'][1:] if x) or '（そのまま）'
-        out.append(f'<li>{pct(s["p"])}：{e(labs)} → {target(s["tgt"], s["v"])}</li>')
-    if len(rows) > 12: out.append(f'<li class="sm">ほか {len(rows) - 12} 通り（合わせて {pct(sum(fv(s["p"]) for s in rows[12:]))}）</li>')
-    out.append('</ul>')
-    tot = sum(fv(s['p']) * fv(s['v']) for s in o['succ'])
-    out.append(f'<p class="eq">P = Σ（確率 × 帰着先の村勝率）= {pct(tot)}</p>')
+        if len(seen) >= 4: break
+    return ''.join(out)
+
+def patterns_html(o):
+    """帰着先を、行き着く村勝率ごとの「パターン」にまとめる（wiki の「1/4になるパターン」と同じ）"""
+    pat = {}
+    for s_ in o['succ']:
+        v = fv(s_['v']); pat.setdefault(v, []).append(s_)
+    out = []
+    for v in sorted(pat, reverse=True):
+        L = sorted(pat[v], key=lambda x: -fv(x['p'])); tp = sum(fv(x['p']) for x in L)
+        if all(x['tgt'] is None for x in L):
+            head = '村勝ちになるパターン' if v == 1 else '狼勝ちになるパターン' if v == 0 else f'{pct(v)}で決着するパターン'
+        else: head = f'{pct(v)}の盤面に進むパターン'
+        out.append(f'<h4>{head}（{pct(tp)}）</h4><ul class="arrow">')
+        for x in L[:8]:
+            labs = ' → '.join(B1.short(y) for y in x['labs'][1:] if y) or '（そのまま）'
+            tail = '' if x['tgt'] is None else ' → ' + target(x['tgt'], x['v'])
+            out.append(f'<li>{pct(x["p"])}：{e(labs)}{tail}</li>')
+        if len(L) > 8: out.append(f'<li class="sm">ほか {len(L) - 8} 通り</li>')
+        out.append('</ul>')
+    terms = ' + '.join(f'{pct(sum(fv(x["p"]) for x in pat[v]))}×{pct(v)}' for v in sorted(pat, reverse=True))
+    tot = sum(fv(x['p']) * fv(x['v']) for x in o['succ'])
+    out.append(f'<p class="eq">P = {terms} = {pct(tot)}</p>')
     return ''.join(out)
 
 def board_page(r):
     from collections import Counter
+    # 見出しが同じで値も同じ（進行だけ違う）内訳はまとめる
+    keep, seen = [], set()
+    for g in r['groups']:
+        sig = (gname(g), tuple((o['name'], o['v']) for o in g['opts']))
+        if sig in seen: continue
+        seen.add(sig); keep.append(g)
+    r['groups'] = keep
     cnt = Counter(gname(g) for g in r['groups'])
     for g in r['groups']:
         g['_t'] = (gname(g) or 'CO者なし') + (f'（進行：{g["policy"]}）' if cnt[gname(g)] > 1 else '')
+    # 生存状況（1w1k生存・灰に狩 など）を見出しにする
+    sits = []
+    for g in r['groups']:
+        for o in g['opts']:
+            if o['name'] not in sits: sits.append(o['name'])
+    order = lambda n: (int(n[0]), '1k' not in n, '灰に狩' not in n, '狩CO' not in n, n)
+    sits.sort(key=order)
     s = [f'<h1 class="pt">{e(r["lab"])}<span class="day">{r["n"]}人日</span></h1>']
     if r['note']: s.append(f'<p class="cond">{e(r["note"])}</p>')
-    s.append('<h2>まとめ</h2>')
-    for gi, g in enumerate(r['groups'], 1):
-        s.append(f'<p class="sub"><a href="#g{gi}">{e(g["_t"])}</a></p><ul class="arrow">')
-        for oi, o in enumerate(g['opts'], 1):
-            s.append(f'<li><a href="#g{gi}-{oi}">{e(o["name"])}</a> → {pct(o["v"])}</li>')
-        s.append('</ul>')
-    for gi, g in enumerate(r['groups'], 1):
-        s.append(f'<h2 id="g{gi}">{e(g["_t"])}</h2>')
-        s.append(f'<p class="sm">進行：{e(g["policy"])}（分岐サイトでこの内訳 {e(g["key"])} に使っている進行）　<a href="{TREEURL}{e(g["tree"])}">分岐ツリー</a></p>')
-        for oi, o in enumerate(g['opts'], 1): s.append(option_html(r, g, o, gi, oi))
+    s.append(LEGEND)
+    s.append('<h2>まとめ</h2><ul class="arrow">')
+    for si, sn in enumerate(sits, 1):
+        vals = [(g, o) for g in r['groups'] for o in g['opts'] if o['name'] == sn]
+        vs = sorted({fv(o['v']) for g, o in vals})
+        rng = pct(vs[0]) if len(vs) == 1 else f'{pct(vs[0])}〜{pct(vs[-1])}'
+        s.append(f'<li><a href="#s{si}">{e(sn)}</a> → {rng}</li>')
+    s.append('</ul>')
+    for si, sn in enumerate(sits, 1):
+        vals = [(g, o) for g in r['groups'] for o in g['opts'] if o['name'] == sn]
+        s.append(f'<h2 id="s{si}">{e(sn)}</h2>')
+        s.append('<ul class="arrow">' + ''.join(f'<li>{e(g["_t"])} → <b>{pct(o["v"])}</b>{frac(o["v"])}</li>' for g, o in vals) + '</ul>')
+        for g, o in vals:
+            gi = r['groups'].index(g) + 1; oi = g['opts'].index(o) + 1
+            s.append(f'<h3 id="g{gi}-{oi}">{e(g["_t"])} → {pct(o["v"])}</h3>')
+            s.append(f'<p class="sm">進行：{e(g["policy"])}　<a href="{TREEURL}{e(g["tree"])}">分岐ツリー</a></p>')
+            s.append(choices_html(o))
+            s.append(patterns_html(o))
     return page(f'{r["n"]}人日 {title(r)}', ''.join(s), r['id'])
+
+LEGEND = ('<div class="legend sm"><b>記号</b>　占a・占b＝占いCO者（a・b で区別）、白a＝占aの○、黒a＝占aの●、白ab＝占aと占bの両方から○。'
+          '◎＝村が<b>真置き</b>している占い師と、その占い師の結果。✕＝<b>破綻</b>した（偽と確定した）占い師と、その占い師の結果（白b✕ は偽の占い師の○なので、囲いの可能性がある）。'
+          '確白＝人間確定。GJの翌朝に狩人がCOして護衛先を申告すると、その狩人と、護衛されていた灰の人が人間確定になる（このときは狩人はもうCO済みなので「灰に狩」はない）。'
+          '狩＝狩人CO者（狼が対抗COして2人いる）。w＝狼、k＝狂人。</div>')
 
 def menu(cur):
     out = ['<div class="side"><div class="mb"><div class="mh">メニュー</div><a href="index.html">トップページ</a><a href="index.html#rules">前提</a><a href="https://leonmfvo.github.io/werewolf-tree-10a/">分岐サイト</a><a href="../index.html">終盤表</a></div>']
@@ -136,7 +176,7 @@ def page(t, body, cur):
 def index_page():
     s = ['<h1 class="pt">10a狩 盤面別勝率</h1>',
          '<p>盤面（生きている人の見た目）を選ぶと、内訳と<b>人外が何人残っているか（w＝狼、k＝狂人）・狩人が灰に残っているか</b>ごとに、村勝率と、次の昼にどの盤面へ帰着するかが出ます。それまでに誰が死んだかは載せません。</p>',
-         '<p class="sm">表記：占a・占b・占c＝占いCO者、霊・霊a・霊b＝霊能CO者、白a＝占aの○、白ab＝占aと占bの○、黒a＝占aの●、確白＝人間確定（GJで守られた人・COした狩人）、狩＝狩人CO者（対抗あり）、灰＝グレー。◎＝真置きしている占い師（の結果）、✕＝破綻した占い師（の結果）。内訳は 真＝本物・狂＝狂人・狼＝狼。</p>']
+         LEGEND]
     for n in DAYS:
         L = sorted([x for x in R if x['n'] == n], key=lambda x: x['id'])
         s.append(f'<h2>{n}人日</h2><ul>')
