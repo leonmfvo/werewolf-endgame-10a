@@ -16,4 +16,4 @@
 - `compute/pos/pos.py`：村と人外がそれぞれ見えている情報だけで手を決めるゲームを sequence form の線形計画で解き、分数で検算する
 - `compute/pos/boards2.py`：見た目の盤面と真偽の一覧（生存状況は自動で並ぶ。ここに足せば増やせる）
 - `compute/pos/derive.py`：導出の式と最善進行の表
-- 作り直し：`cd compute/pos && python3 build_surf.py ../../data/pos5.json && python3 build_wiki.py ../..`
+- 作り直し：`cd compute/pos && python3 build_surf.py 5 ../../data/pos5.json && python3 build_wiki.py ../..`（3・5・6人日それぞれ）

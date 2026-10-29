@@ -234,7 +234,7 @@ def collect_leaves(root):
             stack.append((ch, p * e if nd.kind == 'C' else p))
     return out
 
-def solve(g, fix=None):
+def solve(g, fix=None, refine=True):
     """fix = {(村の情報集合, 手): 1} で村の手を固定。戻り値：(値, 村の手順ごとの重み)"""
     vseqs = [()]
     for info, (par, acts) in g.vinfo.items(): vseqs += [par + ((info, a),) for a in acts]
@@ -267,6 +267,7 @@ def solve(g, fix=None):
     res = linprog(c, A_ub=Aub, b_ub=np.zeros(NA), A_eq=Aeq, b_eq=beq, bounds=bounds, method='highs')
     assert res.status == 0, res.message
     val = -res.fun
+    if not refine: return val, {s: res.x[vi[s]] for s in vseqs}
     # 2段目：勝率 val を保ったまま、人外がでたらめに打ったときの村勝率も最大にする（最善から外れた局面でも村がまともに打つように）
     acts_n = {info: len(acts) for info, (par, acts) in g.ainfo.items()}
     c2 = np.zeros(NV + NQ)
@@ -338,3 +339,42 @@ def case_values(g, val):
     for (w, ch), (_, ai, _) in zip(g.root.children, g.cases):
         out[ai] += w * val(ch); wsum[ai] += w
     return [o / s for o, s in zip(out, wsum)]
+
+# ---------------------------------------------------------------- 対称化
+# 同じ見え方の人を入れ替えてもゲームは変わらないので、村の手順の重みを入れ替えの平均にしても最善のまま。
+# 線形計画が返す「最善の中の偏った1点」を、入れ替えに対して公平な点（灰からランダム、など）にそろえる。
+def _pm_ev(e, p):
+    t = e[0]
+    if t in ('hang', 'dead', 'hco2'): return (t, p[e[1]]) + e[2:]
+    if t == 'seer': return (t, p[e[1]], p[e[2]], e[3])
+    if t == 'med': return (t, p[e[1]], e[2])
+    if t == 'hco': return (t, p[e[1]], p[e[2]])
+    return e
+
+def _pm_seq(seq, p):
+    out = []
+    for (kind, vh), a in seq:
+        out.append(((kind, tuple(_pm_ev(e, p) for e in vh)), p[a] if isinstance(a, int) else a))
+    return tuple(out)
+
+def symmetrize(g, x, cap=800):
+    from itertools import permutations, product
+    cls = {}
+    for i, l in enumerate(g.labels): cls.setdefault(l, []).append(i)
+    groups = [list(permutations(v)) for v in cls.values()]
+    total = 1
+    for gg in groups: total *= len(gg)
+    if total == 1 or total > cap: return x
+    perms = []
+    for combo in product(*groups):
+        p = list(range(g.n0))
+        for src, dst in zip(cls.values(), combo):
+            for a, b in zip(src, dst): p[a] = b
+        perms.append(p)
+    out = {s: 0.0 for s in x}
+    for s, w in x.items():
+        if w < 1e-12: continue
+        for p in perms:
+            t = _pm_seq(s, p)
+            if t in out: out[t] += w / total
+    return out

@@ -122,7 +122,7 @@ def policy(g, beh, adv):
             if i not in names:
                 l = labels[i]
                 if l in multi:
-                    cnt[l] = cnt.get(l, 0) + 1; names[i] = l + 'ABCDE'[cnt[l] - 1]
+                    cnt[l] = cnt.get(l, 0) + 1; names[i] = l + 'ABCDEFGHIJ'[cnt[l] - 1]
                 else: names[i] = l
             return names[i]
         day = 1; parts = []; cur = []
@@ -142,7 +142,17 @@ def policy(g, beh, adv):
         bh = beh.get(info) or {}
         nd = nodes[info]
         if kind == 'D':
-            acts = '／'.join(f'{nm(a)}を吊る' + ('' if q == 1 else f'（{fs(q)}）') for a, q in sorted(bh.items(), key=lambda kv: -kv[1]))
+            # まだ名前の出ていない人を同じ確率で吊るなら「〜からランダム」とまとめる
+            alive = set(nd.vlabel)
+            parts = []; rest = dict(bh)
+            for l in dict.fromkeys(labels):
+                un = [i for i in sorted(alive) if labels[i] == l and i not in names]
+                if len(un) >= 2 and all(i in rest for i in un) and len({rest[i] for i in un}) == 1:
+                    q = sum(rest.pop(i) for i in un)
+                    parts.append((q, (f'まだ名前の出ていない{l}{len(un)}人' if names else f'{l}{len(un)}人') + 'からランダムに吊る'))
+            for a, q in rest.items(): parts.append((q, f'{nm(a)}を吊る'))
+            parts.sort(key=lambda t: -t[0])
+            acts = '／'.join(t + ('' if q == 1 else f'（{fs(q)}）') for q, t in parts)
             d = 1 + sum(1 for e in vh if e[0] == 'hang')
             when = f'{d}日目'
         else:

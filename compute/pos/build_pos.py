@@ -1,26 +1,37 @@
 import json, sys, time
 from fractions import Fraction as F
-from pos import Game, solve, behaviour, exact_eval, case_values
+from pos import Game, solve, behaviour, exact_eval, case_values, symmetrize
 from derive import build_trie, formulas, policy, fs
 
-def run(b):
+def run(b, known=None):
     g = Game(b)
-    val, x = solve(g); beh = behaviour(g, x); ex, adv, v = exact_eval(g, beh)
-    assert abs(float(ex) - val) < 1e-7, (b['note'], val, ex)
+    val, x = solve(g); beh = behaviour(g, symmetrize(g, x)); ex, adv, v = exact_eval(g, beh)
+    assert abs(float(ex) - val) < 1e-7, (b['labels'], b['cases'], val, ex)
     cv = case_values(g, v)
-    known = []
-    for c in b['cases']:
+    if known is None and len(b['cases']) == 1: known = [fs(ex)]
+    for c in ([] if known is not None else b['cases']):
+        known = known or []
         g1 = Game(dict(b, cases=[c])); v1, x1 = solve(g1); e1 = exact_eval(g1, behaviour(g1, x1))[0]
         assert abs(float(e1) - v1) < 1e-7; known.append(fs(e1))
     # 1日目の吊り先ごとの勝率（その手に固定して解き直す）
     rinfo = ('D', ())
     root_alts = {}
-    rn = next(nd for _, nd in g.root.children if nd.kind == 'V')
+    def find(nd):
+        if nd.kind == 'V' and nd.info == rinfo: return nd
+        for _, ch in nd.children:
+            if ch.kind in 'CV':
+                r = find(ch)
+                if r: return r
+    rn = find(g.root)
+    done = {}
     for a in g.vinfo[rinfo][1]:
-        va, xa = solve(g, {(rinfo, a): 1}); ba = behaviour(g, xa); ea, adva, vva = exact_eval(g, ba)
-        assert abs(float(ea) - va) < 1e-7
         lab = rn.vlabel[a]
-        root_alts.setdefault(lab, []).append((a, ea, [fs(c) for c in case_values(g, vva)]))
+        if lab not in done:   # 同じ見え方の人は条件が対称なので1人だけ解く
+            va, xa = solve(g, {(rinfo, a): 1}); ba = behaviour(g, xa); ea, adva, vva = exact_eval(g, ba)
+            if abs(float(ea) - va) > 1e-7:   # 混ぜる手が分数に丸まらないとき：値は線形計画から
+                ea = F(va).limit_denominator(100000); vva = None
+            done[lab] = (ea, [fs(c) for c in case_values(g, vva)] if vva else [])
+        root_alts.setdefault(lab, []).append((a, done[lab][0], done[lab][1]))
     ra = []
     for lab, lst in root_alts.items():
         vals = sorted({e for _, e, _ in lst})

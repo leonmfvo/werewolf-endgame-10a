@@ -1,4 +1,4 @@
-# 5人日：見た目の盤面ごとに、真偽（占い真など）→ 生存状況（1w生存・1w1k生存・2w生存 × 狩の有無）を自動で並べる
+# 3・5・6人日：見た目の盤面ごとに、真偽（占い真など）→ 生存状況（1w生存・1w1k生存・2w生存 × 狩の有無）を自動で並べる
 from itertools import product
 
 TOTAL = {'S': 1, 'M': 1, 'H': 1, 'X': 1, 'W': 2, 'V': 4}
@@ -30,6 +30,13 @@ SURF = [
     ('灰,灰,灰,灰,灰', [('', [{}])]),
 ]
 
+def fit(lab, n):
+    """5人日の見た目を n 人日に合わせる（灰の数を変える）。灰が1人もいなくなるものは None"""
+    L = lab.split(',')
+    head = [x for x in L if x != '灰']
+    if len(head) >= n: return None
+    return ','.join(head + ['灰'] * (n - len(head)))
+
 def sit_name(w, x, h):
     return f'{w}w' + (f'{x}k' if x else '') + '生存' + ('・狩生存' if h else '')
 
@@ -44,14 +51,19 @@ def situations(labels, fixed):
         gv = nfree - gw - gx - gh
         if gv < 0 or gv + fc['V'] > TOTAL['V']: continue
         n = len(labels)
-        if x and 2 * (w + 1) > n: continue          # PP 確定（村勝率0）は載せない
+        if 2 * w >= n: continue                      # もう狼の勝ち
+        if x and n >= 5 and 2 * (w + 1) > n: continue   # PP 確定（村勝率0）は載せない
+        if n <= 3 and gh: continue                   # 3人日は灰に狩人がいてもいなくても同じ（夜が来ない）
         gray = {r: k for r, k in (('W', gw), ('X', gx), ('H', gh), ('V', gv)) if k}
         out.append(dict(key=(w, x, h), title=sit_name(w, x, h), gray=gray))
     return out
 
-def surfaces():
-    res = []
-    for si, (lab, truths) in enumerate(SURF):
+def surfaces(n):
+    res = []; seen = set()
+    for lab0, truths in SURF:
+        lab = fit(lab0, n)
+        if lab is None or lab in seen: continue
+        seen.add(lab)
         labels = lab.split(',')
         T = []
         for tn, fixed in truths:
@@ -60,21 +72,22 @@ def surfaces():
             for s in sits:
                 secs.append(dict(title=s['title'], key=s['key'],
                                  board=dict(labels=labels, cases=[dict(name=s['title'], gray=s['gray'], fixed=fixed)])))
-            # 1w と 1w1k のどちらか分からない（狩の有無ごと）
-            for h in (0, 1):
-                a = next((s for s in sits if s['key'] == (1, 0, h)), None); b = next((s for s in sits if s['key'] == (1, 1, h)), None)
+            # 狂人が生きているか分からない（狼の数・狩の有無ごと）
+            for w, h in product((1, 2), (0, 1)):
+                a = next((s for s in sits if s['key'] == (w, 0, h)), None); b = next((s for s in sits if s['key'] == (w, 1, h)), None)
                 if a and b:
-                    secs.append(dict(title='1wか1w1kか不明' + ('・狩生存' if h else ''), key=(1, 9, h),
+                    secs.append(dict(title=f'{w}wか{w}w1kか不明' + ('・狩生存' if h else ''), key=(w, 9, h),
                                      board=dict(labels=labels, cases=[dict(name=a['title'], gray=a['gray'], fixed=fixed),
                                                                       dict(name=b['title'], gray=b['gray'], fixed=fixed)])))
             secs.sort(key=lambda s: s['key'])
-            T.append(dict(name=tn, sections=secs))
-        res.append(dict(id=f's5-{si + 1:02d}', labels=labels, truths=T))
+            if secs: T.append(dict(name=tn, sections=secs))
+        if T: res.append(dict(id=f's{n}-{len(res) + 1:02d}', day=n, labels=labels, truths=T))
     return res
 
 if __name__ == '__main__':
+    import sys
     n = 0
-    for s in surfaces():
+    for s in surfaces(int(sys.argv[1])):
         print(s['id'], ','.join(s['labels']))
         for t in s['truths']:
             print('   ', t['name'], [x['title'] for x in t['sections']]); n += len(t['sections'])
