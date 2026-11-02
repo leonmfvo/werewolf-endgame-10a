@@ -3,7 +3,7 @@ import sys, json, time, os
 from fractions import Fraction as F
 import daily as D
 
-PATH = os.environ.get('DICT_PATH') or os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'data', 'dict.json')   # 長い計算中は DICT_PATH（git管理外）に保存し、終わってから dict.json へ
+PATH = os.environ.get('DICT_PATH') or os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', '..', 'data', 'dict.json')   # 長い計算中は DICT_PATH（git管理外）に保存し、終わってから dict.json へ
 
 def load():
     if os.path.exists(PATH):
@@ -40,4 +40,4 @@ if __name__ == '__main__':
                 res[','.join(b)][sit] = str(v)
                 print(n, ','.join(b), sit, v, f'{float(v) * 100:.1f}%', round(time.time() - t, 1), 's', len(D.DICT), 'states', flush=True)
             save()
-        if not sel: json.dump(res, open(os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'data', f'daily{n}.json'), 'w'), ensure_ascii=False)
+        if not sel: json.dump(res, open(os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', '..', 'data', f'daily{n}.json'), 'w'), ensure_ascii=False)
