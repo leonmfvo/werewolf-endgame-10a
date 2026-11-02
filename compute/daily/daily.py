@@ -277,6 +277,10 @@ def solve_day(key, labels, worlds):
         if bestf is not None and vf0 <= bestf + 1e-12: break
         GM.MODE.update(exact=False, tags=False)
         g = Game(labels, plan, start=start); root, _ = g.root()
+        if bestf is not None:
+            # 中間の確認：やり直し3回・崩しなし。2段目の最初の3回はこれと同じ探索から始まって崩しで下がるだけなので、2段目の値はこれ以下
+            vmid = adversary_min(root, starts=3, kicks=0)[0]
+            if vmid <= bestf + 1e-12: continue
         vf, pol = adversary_min(root)
         if best is not None and vf < float(best[0]) - 1e-9: continue
         GM.MODE.update(exact=True, tags=False)    # 値は分数の木で厳密に
