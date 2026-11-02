@@ -27,7 +27,7 @@ if __name__ == '__main__':
         res = {}
         sel = os.environ.get('PART')   # 並行して解くとき：'k/m/s' なら s 番目以降の盤面のうち、番号を m で割った余りが k のものだけ
         bl = [b for b in board_list(n) if D.GM.worlds(b)]
-        if sel and n >= 5:
+        if sel and n >= 4:
             k, m, s0 = map(int, sel.split('/'))
             bl = [b for i, b in enumerate(bl) if i >= s0 and (i - s0) % m == k]
         if os.environ.get('BOARDS'):   # 解く盤面を直接指定（'霊,霊,灰,灰,灰;…'）
